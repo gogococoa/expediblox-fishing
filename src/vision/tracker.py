@@ -18,9 +18,9 @@ class MinigameTracker:
         self.bridge_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (25, 3))
 
     def process_frame(self, sct_img):
-        # Direct BGRA to HSV conversion
-        frame = np.ascontiguousarray(sct_img)
-        hsv = cv2.cvtColor(frame, cv2.COLOR_BGRA2HSV)
+        # Drop alpha channel and convert BGR -> HSV
+        frame_bgr = np.ascontiguousarray(sct_img)[:, :, :3]
+        hsv = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2HSV)
 
         # 1. Detect Capture Bar
         mask_blue = cv2.inRange(hsv, self.lower_blue, self.upper_blue)
@@ -69,5 +69,4 @@ class MinigameTracker:
             else False
         )
 
-        # Return raw numerical metrics directly
         return is_inside, fish_x, bar_center

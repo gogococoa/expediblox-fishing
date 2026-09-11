@@ -12,8 +12,9 @@ class GameStateDetector:
         self.upper_idle_cyan = np.array([105, 255, 255])
 
     def detect_state(self, sct_img):
-        frame = np.ascontiguousarray(sct_img)
-        hsv = cv2.cvtColor(frame, cv2.COLOR_BGRA2HSV)
+        # Drop alpha channel and convert BGR -> HSV
+        frame_bgr = np.ascontiguousarray(sct_img)[:, :, :3]
+        hsv = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2HSV)
 
         mask_idle = cv2.inRange(hsv, self.lower_idle_cyan, self.upper_idle_cyan)
         cyan_pixel_count = cv2.countNonZero(mask_idle)

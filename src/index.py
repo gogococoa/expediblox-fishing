@@ -28,14 +28,6 @@ state_detector = GameStateDetector(IDLE_REGION)
 
 bot_active = False
 
-
-def toggle_bot():
-    global bot_active
-    bot_active = not bot_active
-    status = "RUNNING" if bot_active else "PAUSED"
-    print(f"\n[!] BOT TOGGLED -> {status}\n")
-
-
 def cleanup_and_exit():
     try:
         keyboard.unhook_all()
@@ -44,21 +36,14 @@ def cleanup_and_exit():
     ahk.close()
     sys.exit(0)
 
-
-keyboard.add_hotkey("f1", toggle_bot)
 keyboard.add_hotkey("q", cleanup_and_exit)
 
 print("[+] High-Performance Engine Running.")
 print("[+] Press [F1] to START/PAUSE bot.")
 print("[+] Press [Q] to QUIT.\n")
 
-with mss.mss() as sct:
+with mss.MSS() as sct:
     while True:
-        if not bot_active:
-            ahk.send_state("PAUSED", "BOT PAUSED")
-            time.sleep(0.05)
-            continue
-
         idle_sct = sct.grab(IDLE_REGION)
         state = state_detector.detect_state(idle_sct)
 
