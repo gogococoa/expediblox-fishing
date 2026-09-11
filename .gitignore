@@ -1,0 +1,35 @@
+# Virtual Environments (CRITICAL)
+env/
+venv/
+ENV/
+.venv/
+
+# Python Bytecode & Cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Type Checking & Linter Caches
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# Package & Build Artifacts
+*.egg-info/
+dist/
+build/
+.pdm-python
+
+# IDE & Editor Configurations
+.vscode/
+.idea/
+*.swp
+
+# OS Generated Files
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Temporary Test Files & Logs
+*.log
+test_output/

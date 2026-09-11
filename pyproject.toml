@@ -1,0 +1,18 @@
+[project]
+name = "expediblox-fishing"
+version = "0.1.0"
+description = "Default template for PDM package"
+authors = [
+    {name = "gogococoa",email = "saint2737@gmail.com"},
+]
+dependencies = []
+requires-python = "==3.12.*"
+readme = "README.md"
+license = {text = "MIT"}
+
+[tool.pdm.scripts]
+dev = "python src/index.py"
+
+
+[tool.pdm]
+distribution = false
