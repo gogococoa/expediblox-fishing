@@ -1,18 +1,17 @@
 # Import module for handling file paths and operating system interactions
 import os
-
 # Import module to launch external programs (used here to run AutoHotkey)
 import subprocess
-
+import sys
 # Import module for managing delays and execution timing
 import time
 
 # Import OpenCV for computer vision and image processing operations
 import cv2
 
+import keyboard
 # Import MSS for ultra-fast, low-CPU screen capture on Windows
 import mss
-
 # Import NumPy for fast numerical and array manipulations on image frames
 import numpy as np
 
@@ -39,6 +38,17 @@ def send_click_to_ahk(target_x, target_y):
     # Launch AHK as a non-blocking background process passing target X and Y
     subprocess.Popen([AHK_PATH, AHK_SCRIPT, str(target_x), str(target_y)])
 
+def exit_app_instantly():
+    print("\n[-] 'q' pressed! Killing program immediately...")
+    # Properly destroy OpenCV windows before instant process exit
+    cv2.destroyAllWindows()
+    # Instantly terminates the main process from any thread
+    os._exit(0)
+
+
+# Bind global hotkey
+keyboard.add_hotkey("q", exit_app_instantly)
+
 # Initialize the MSS screen capture context manager
 with mss.mss() as sct:
     # Print status message to console
@@ -58,14 +68,16 @@ with mss.mss() as sct:
         # Convert image color space from BGR to HSV (easier to isolate specific colors)
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-        # Define lower range for red color detection in HSV [Hue, Saturation, Value]
-        lower_red = np.array([0, 120, 70])
+        # Exact OpenCV HSV for #0071C2 is [102, 255, 194]
 
-        # Define upper range for red color detection in HSV [Hue, Saturation, Value]
-        upper_red = np.array([10, 255, 255])
+        # Lower bound (subtract tolerance for slight lighting variations)
+        lower_blue = np.array([92, 180, 140])
+
+        # Upper bound (add tolerance)
+        upper_blue = np.array([112, 255, 240])
 
         # Create a binary black/white mask where red pixels are white and others are black
-        mask = cv2.inRange(hsv, lower_red, upper_red)
+        mask = cv2.inRange(hsv, lower_blue, upper_blue)
 
         # Detect shapes/outer boundaries of all white pixel blobs in the mask
         contours, _ = cv2.findContours(
