@@ -9,12 +9,11 @@ from actions.hand import AHKController
 from vision.state import GameStateDetector
 from vision.tracker import MinigameTracker
 
-# Original focused regions
 TRACKER_REGION = {
     "left": 500,
-    "top": 980,
+    "top": 976,
     "width": 1420 - 500,
-    "height": 1010 - 980,
+    "height": 1005 - 976,
 }
 
 IDLE_REGION = {
@@ -28,7 +27,6 @@ ahk = AHKController()
 tracker = MinigameTracker(TRACKER_REGION)
 state_detector = GameStateDetector(IDLE_REGION)
 
-# Bot Execution Flag
 bot_active = False
 
 
@@ -36,7 +34,7 @@ def toggle_bot():
     global bot_active
     bot_active = not bot_active
     status = "RUNNING" if bot_active else "PAUSED"
-    print(f"[!] Bot State Toggled: {status}")
+    print(f"\n[!] BOT TOGGLED -> {status}\n")
 
 
 def cleanup_and_exit():
@@ -47,43 +45,60 @@ def cleanup_and_exit():
     ahk.close()
     cv2.destroyAllWindows()
     sys.exit(0)
-    os._exit(0)
 
 
-# Hotkey registration
 keyboard.add_hotkey("f1", toggle_bot)
 keyboard.add_hotkey("q", cleanup_and_exit)
 
-print("[+] Script Initialized.")
-print("[+] Press [F1] to START / PAUSE the bot.")
-print("[+] Press [Q] to QUIT completely.")
+print("[+] Inspection Mode Active.")
+print("[+] Press [F1] to START/PAUSE bot.")
+print("[+] Press [Q] to QUIT.\n")
 
 with mss.MSS() as sct:
+    action = "PAUSED"
     while True:
-        # Capture dedicated regions
         idle_sct = sct.grab(IDLE_REGION)
         tracker_sct = sct.grab(TRACKER_REGION)
 
         state = state_detector.detect_state(idle_sct)
         is_inside, metrics, debug_frame = tracker.process_frame(tracker_sct)
 
-        # Action evaluation based on bot state
-        if bot_active:
-            if state == "IDLE":
-                action = "CAST"
-            else:
-                # Basic containment control logic: HOLD if outside, RELEASE if inside
-                action = "RELEASE" if is_inside else "HOLD"
+        
+        if state == "IDLE":
+            action = "CAST"
         else:
-            action = "PAUSED"
+            # Parse positions directly for inspection
+            fish_x = 0
+            bar_center = 0
+
+            if "FishX:" in metrics and "Bar:[" in metrics:
+                try:
+                    fish_part = metrics.split("|")[0]
+                    bar_part = metrics.split("|")[1]
+                    fish_x = int(fish_part.split(":")[1].strip())
+                    bar_bounds = bar_part.split("[")[1].split("]")[0].split("-")
+                    bar_x_start = int(bar_bounds[0])
+                    bar_x_end = int(bar_bounds[1])
+                    bar_center = (bar_x_start + bar_x_end) // 2
+                except Exception:
+                    pass
+
+            # Containment logic decision
+            if fish_x > 0 and bar_center > 0:
+                if fish_x > bar_center:
+                    action = "RIGHT_PULSE"
+                else:
+                    action = "LEFT_WAIT"
+            else:
+                action = "LEFT_WAIT"
+
+            # Real-time console inspection readout
+            print(
+                f"[INSPECT] State: {state} | FishX: {fish_x} | BarCenter: {bar_center} | Action: {action}",
+                end="\r",
+            )
 
         active_prefix = "[BOT: ACTIVE]" if bot_active else "[BOT: PAUSED]"
-        
-        # Send action directly as parameter 1 to AHK
         ahk.send_state(action, f"{active_prefix} [{state}] {metrics}")
-
-        cv2.imshow("Tracker View", debug_frame)
-        if cv2.waitKey(1) & 0xFF == ord("q"):
-            cleanup_and_exit()
 
         time.sleep(0.01)
