@@ -1,18 +1,37 @@
 #Requires AutoHotkey v2.0
 #SingleInstance Force
 
-; In v2, command-line arguments are stored in the global A_Args array
-; Check if at least two arguments (X and Y coordinates) were passed
-if (A_Args.Length >= 2) {
-    x := A_Args[1]
-    y := A_Args[2]
+; Unbuffer stdout/stdin streams
+DllCall("AllocConsole")
+WinHide("ahk_id " DllCall("GetConsoleWindow", "Ptr"))
 
-    ; Move mouse instantly (Speed = 0) and click
-    MouseMove(x, y, 0)
-    Click()
+CoordMode("Mouse", "Screen")
+SendMode("Input")
+SetDefaultMouseSpeed(0)
 
-    SoundBeep(750, 200)
+stdin := FileOpen("*", "r", "UTF-8")
+
+Loop {
+    if stdin.AtEOF {
+        Sleep(10)
+        continue
+    }
+    
+    line := stdin.ReadLine()
+    line := Trim(line)
+    
+    if (line != "") {
+        coords := StrSplit(line, ",")
+        if (coords.Length >= 2) {
+            x := Integer(coords[1])
+            y := Integer(coords[2])
+            
+            ToolTip("AHK GOT COMMAND: X=" x " Y=" y, x + 20, y + 20)
+            SetTimer(() => ToolTip(), -1500)
+            
+            DllCall("SetCursorPos", "Int", x, "Int", y)
+            Click("left")
+            SoundBeep(900, 100)
+        }
+    }
 }
-
-; Terminate script execution after handling input
-ExitApp()
