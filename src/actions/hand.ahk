@@ -22,15 +22,23 @@ Loop {
     if (line != "") {
         params := StrSplit(line, ",")
         if (params.Length >= 2) {
-            state := params[1]     ; "INSIDE" or "OUTSIDE"
-            metrics := params[2]   ; "FX:120|BS:100|BE:300"
+            is_inside_str := params[1]   ; "INSIDE" or "OUTSIDE"
+            payload := params[2]         ; "[IDLE] FishX:0 | Bar:[0-0]" or "[FISHING] FishX:..."
             
-            ; Live Diagnostic HUD Overlay at (100, 100)
-            if (state == "INSIDE") {
-                ToolTip("=== FISH CAPTURED [ INSIDE ] ===`nMetrics: " metrics, 100, 100)
-            } else {
-                ToolTip("--- FISH ESCAPED [ OUTSIDE ] ---`nMetrics: " metrics, 100, 100)
+            ; 1. Display Game State (Line 1)
+            state_text := "STATE: UNKNOWN"
+            if InStr(payload, "[IDLE]") {
+                state_text := "STATE: [ IDLE ] - Ready to Cast"
+            } else if InStr(payload, "[FISHING]") {
+                state_text := "STATE: [ FISHING ] - Minigame Active"
             }
+
+            ; 2. Display Catch Containment Status (Line 2)
+            fish_status := (is_inside_str == "INSIDE") ? ">>> IN TARGET <<<" : "--- OUT OF TARGET ---"
+
+            ; Combine into a clean structured HUD overlay at top-left screen (100, 100)
+            hud_text := state_text . "`n" . fish_status . "`n" . payload
+            ToolTip(hud_text, 100, 100)
         }
     }
 }
