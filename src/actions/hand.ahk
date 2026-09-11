@@ -1,13 +1,12 @@
 #Requires AutoHotkey v2.0
 #SingleInstance Force
 
-; Unbuffer stdout/stdin streams
 DllCall("AllocConsole")
 WinHide("ahk_id " DllCall("GetConsoleWindow", "Ptr"))
 
+; Force ToolTip coordinates to follow absolute screen pixels
+CoordMode("ToolTip", "Screen")
 CoordMode("Mouse", "Screen")
-SendMode("Input")
-SetDefaultMouseSpeed(0)
 
 stdin := FileOpen("*", "r", "UTF-8")
 
@@ -21,17 +20,17 @@ Loop {
     line := Trim(line)
     
     if (line != "") {
-        coords := StrSplit(line, ",")
-        if (coords.Length >= 2) {
-            x := Integer(coords[1])
-            y := Integer(coords[2])
+        params := StrSplit(line, ",")
+        if (params.Length >= 2) {
+            state := params[1]     ; "INSIDE" or "OUTSIDE"
+            metrics := params[2]   ; "FX:120|BS:100|BE:300"
             
-            ToolTip("AHK GOT COMMAND: X=" x " Y=" y, x + 20, y + 20)
-            SetTimer(() => ToolTip(), -1500)
-            
-            DllCall("SetCursorPos", "Int", x, "Int", y)
-            Click("left")
-            SoundBeep(900, 100)
+            ; Live Diagnostic HUD Overlay at (100, 100)
+            if (state == "INSIDE") {
+                ToolTip("=== FISH CAPTURED [ INSIDE ] ===`nMetrics: " metrics, 100, 100)
+            } else {
+                ToolTip("--- FISH ESCAPED [ OUTSIDE ] ---`nMetrics: " metrics, 100, 100)
+            }
         }
     }
 }
