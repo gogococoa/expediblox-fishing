@@ -10,6 +10,8 @@ CoordMode("Mouse", "Screen")
 
 stdin := FileOpen("*", "r", "UTF-8")
 
+is_holding := false
+
 Loop {
     if stdin.AtEOF {
         Sleep(10)
@@ -22,8 +24,8 @@ Loop {
     if (line != "") {
         params := StrSplit(line, ",")
         if (params.Length >= 2) {
-            is_inside_str := params[1]   ; "INSIDE" or "OUTSIDE"
-            payload := params[2]         ; "[IDLE] FishX:0 | Bar:[0-0]" or "[FISHING] FishX:..."
+            action := params[1]    ; "CAST", "HOLD", "RELEASE", "PAUSED"
+            payload := params[2]   ; "[BOT: ACTIVE] [FISHING] FishX:..."
             
             ; 1. Display Game State (Line 1)
             state_text := "STATE: UNKNOWN"
